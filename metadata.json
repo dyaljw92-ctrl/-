@@ -1,0 +1,5 @@
+{
+  "name": "Hogwarts Word Wizard",
+  "description": "A magical vocabulary learning app inspired by Harry Potter, featuring Ebbinghaus forgetting curve and interactive story-based learning.",
+  "requestFramePermissions": ["camera"]
+}
