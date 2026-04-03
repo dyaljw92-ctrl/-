@@ -80,6 +80,14 @@ export default function App() {
     const finalWords = wordsToUse || inputWords.split(/[,，\s]+/).filter(w => w.length > 0);
     if (finalWords.length === 0) return;
     
+    // Check if API key is set
+    const hasKey = !!(import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_OPENROUTER_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY));
+    
+    if (!hasKey) {
+      alert("魔法咒语失效了！\n\n请在 Vercel 环境变量中设置:\nVITE_GEMINI_API_KEY 或 VITE_OPENROUTER_API_KEY\n\n设置后记得重新部署(Redeploy)哦！");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const data = await generateWizardContent(finalWords);
@@ -93,7 +101,6 @@ export default function App() {
         const existingIdx = newProgress.findIndex(p => p.word.toLowerCase() === normalized);
         
         if (existingIdx > -1) {
-          // Update details if missing
           if (!newProgress[existingIdx].details && detail) {
             newProgress[existingIdx].details = detail;
           }
@@ -112,8 +119,9 @@ export default function App() {
       setProgress(newProgress);
       setActiveTab('story');
       playWandSound();
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Magic Error:", error);
+      alert("魔法召唤失败: " + (error.message || "未知错误") + "\n请检查 API Key 是否有效或网络是否通畅。");
     } finally {
       setIsLoading(false);
     }
@@ -170,6 +178,14 @@ export default function App() {
   };
 
   const processImage = async (base64: string) => {
+    // Check if API key is set
+    const hasKey = !!(import.meta.env?.VITE_GEMINI_API_KEY || import.meta.env?.VITE_OPENROUTER_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY));
+    
+    if (!hasKey) {
+      alert("魔法咒语失效了！\n\n请在 Vercel 环境变量中设置:\nVITE_GEMINI_API_KEY 或 VITE_OPENROUTER_API_KEY\n\n设置后记得重新部署(Redeploy)哦！");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const recognizedWords = await recognizeWordsFromImage(base64);
@@ -179,9 +195,9 @@ export default function App() {
       } else {
         alert("魔法猫头鹰没能看清图片中的单词，请换一张试试。");
       }
-    } catch (err) {
-      console.error("Recognition error:", err);
-      alert("魔法识别失败，请稍后再试。");
+    } catch (error: any) {
+      console.error("Recognition error:", error);
+      alert("魔法识别失败: " + (error.message || "未知错误") + "\n请确保您的 API Key 有效。");
     } finally {
       setIsLoading(false);
     }
@@ -563,7 +579,14 @@ export default function App() {
                     className="fixed inset-0 z-[60] bg-black flex flex-col items-center justify-center p-4"
                   >
                     <div className="relative w-full max-w-2xl aspect-video bg-gray-900 rounded-lg overflow-hidden border-4 border-gryffindor-gold">
-                      <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        muted
+                        onCanPlay={() => videoRef.current?.play()}
+                        className="w-full h-full object-cover" 
+                      />
                       <div className="absolute inset-0 border-2 border-dashed border-white/30 pointer-events-none m-8" />
                     </div>
                     <canvas ref={canvasRef} className="hidden" />

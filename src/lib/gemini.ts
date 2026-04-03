@@ -1,6 +1,60 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+// Robust API Key detection for different environments
+const getApiKey = () => {
+  if (import.meta.env?.VITE_GEMINI_API_KEY) return import.meta.env.VITE_GEMINI_API_KEY;
+  try {
+    if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+  } catch (e) {}
+  return "";
+};
+
+const getOpenRouterKey = () => {
+  if (import.meta.env?.VITE_OPENROUTER_API_KEY) return import.meta.env.VITE_OPENROUTER_API_KEY;
+  return "";
+};
+
+const apiKey = getApiKey();
+const openRouterKey = getOpenRouterKey();
+
+console.log("✨ Magic System Initializing...");
+if (openRouterKey) console.log("✅ OpenRouter Key detected.");
+else if (apiKey) console.log("✅ Gemini Key detected.");
+else console.warn("❌ No API Key detected. Please set VITE_GEMINI_API_KEY or VITE_OPENROUTER_API_KEY in Vercel.");
+
+const ai = new GoogleGenAI({ apiKey: apiKey || "dummy_key" });
+
+async function callOpenRouter(prompt: string, isImage: boolean = false, base64Image?: string) {
+  const model = "google/gemini-2.0-flash-001"; // OpenRouter model name
+  
+  const messages: any[] = [
+    {
+      role: "user",
+      content: isImage ? [
+        { type: "text", text: prompt },
+        { type: "image_url", image_url: { url: `data:image/jpeg;base64,${base64Image}` } }
+      ] : prompt
+    }
+  ];
+
+  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openRouterKey}`,
+      "HTTP-Referer": window.location.origin,
+      "X-Title": "Hogwarts Word Wizard",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: messages,
+      response_format: { type: "json_object" }
+    })
+  });
+
+  const data = await response.json();
+  return data.choices[0].message.content;
+}
 
 export interface WordDetail {
   word: string;
@@ -30,9 +84,15 @@ export async function recognizeWordsFromImage(base64Image: string): Promise<stri
     You are a magical owl that can read any text.
     Look at this image and extract all the English words you see. 
     Focus on vocabulary words that are suitable for primary school students.
-    Return only the words as a JSON array of strings.
-    Example: ["apple", "banana", "cat"]
+    Return only the words as a JSON object with a "words" array.
+    Example: {"words": ["apple", "banana", "cat"]}
   `;
+
+  if (openRouterKey) {
+    const text = await callOpenRouter(prompt, true, base64Image.split(",")[1] || base64Image);
+    const result = JSON.parse(text || '{"words": []}');
+    return result.words;
+  }
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
@@ -106,6 +166,11 @@ export async function generateWizardContent(words: string[]) {
       ]
     }
   `;
+
+  if (openRouterKey) {
+    const text = await callOpenRouter(prompt);
+    return JSON.parse(text || "{}");
+  }
 
   const response = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
