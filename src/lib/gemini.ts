@@ -133,13 +133,16 @@ export async function generateWizardContent(words: string[]) {
     You are a friendly magical teacher. I will provide a list of English words: ${words.join(", ")}.
     
     Phase 1: Story Creation
-    Write a VERY SIMPLE and short story for primary school students (ages 7-12) using ALL these words: ${words.join(", ")}.
+    Write a VERY SIMPLE, short, and FUNNY JOKE (幽默小笑话) for primary school students (ages 7-12) using ALL these words: ${words.join(", ")}.
     
-    CRITICAL RULE: 
-    - Use "Stepping Stone" vocabulary (very basic words like 'cat', 'run', 'big', 'happy') for 80% of the story.
-    - Use the target words (${words.join(", ")}) as the "protagonists" (main focus) for the remaining 20%.
-    - The story should be easy to understand, fun, and use basic sentence structures.
+    CRITICAL RULES for the JOKE: 
+    - The content MUST be a joke, a riddle, or a funny situation that makes children laugh.
+    - The humor should be innocent and suitable for kids.
+    - Use "Stepping Stone" vocabulary (very basic words like 'cat', 'run', 'big', 'happy') for 80% of the content.
+    - Use the target words (${words.join(", ")}) as the "punchline" or key elements of the joke.
+    - The joke should be easy to understand, fun, and use basic sentence structures.
     - The theme can be about animals, school life, or a simple magical adventure.
+    - Ensure the English level is strictly for beginners (A1 level).
     
     Output the story in both English and Chinese. 
     Bold the target words in the English version using **word** format.

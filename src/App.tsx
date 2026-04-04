@@ -88,32 +88,38 @@ export default function App() {
       return;
     }
 
+    // Add words to library immediately (without details yet)
+    const initialProgress = [...progress];
+    finalWords.forEach(w => {
+      const normalized = w.toLowerCase().trim();
+      const existingIdx = initialProgress.findIndex(p => p.word.toLowerCase() === normalized);
+      if (existingIdx === -1) {
+        initialProgress.push({
+          word: normalized,
+          magicValue: 50,
+          lastReview: Date.now(),
+          nextReview: calculateNextReview(0),
+          correctCount: 0,
+          isMastered: false
+        });
+      }
+    });
+    setProgress(initialProgress);
+
     setIsLoading(true);
     try {
       const data = await generateWizardContent(finalWords);
       setSessionData(data);
       
-      // Initialize or update progress
-      const newProgress = [...progress];
+      // Update progress with details
+      const newProgress = [...initialProgress];
       finalWords.forEach(w => {
         const normalized = w.toLowerCase().trim();
         const detail = data.wordDetails.find((d: any) => d.word.toLowerCase() === normalized);
         const existingIdx = newProgress.findIndex(p => p.word.toLowerCase() === normalized);
         
-        if (existingIdx > -1) {
-          if (!newProgress[existingIdx].details && detail) {
-            newProgress[existingIdx].details = detail;
-          }
-        } else {
-          newProgress.push({
-            word: normalized,
-            magicValue: 50,
-            lastReview: Date.now(),
-            nextReview: calculateNextReview(0),
-            correctCount: 0,
-            isMastered: false,
-            details: detail
-          });
+        if (existingIdx > -1 && detail) {
+          newProgress[existingIdx].details = detail;
         }
       });
       setProgress(newProgress);
@@ -680,7 +686,7 @@ export default function App() {
                       }}
                     >
                       <div className="flex justify-between items-start">
-                        <div>
+                        <div className="flex-1">
                           <h3 className="text-3xl font-display text-gryffindor-red flex items-center gap-2">
                             {p.word}
                             {p.isMastered && <Sparkles className="w-5 h-5 text-gryffindor-gold" />}
@@ -694,7 +700,18 @@ export default function App() {
                             </p>
                           )}
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end gap-2">
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`确定要从魔法词库中抹除“${p.word}”吗？`)) {
+                                setProgress(progress.filter(item => item.word !== p.word));
+                              }
+                            }}
+                            className="p-1 text-gray-300 hover:text-gryffindor-red transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
                           <div className="flex items-center gap-2 mb-1">
                             <Zap className="w-4 h-4 text-gryffindor-gold" />
                             <span className="font-display text-sm">魔力值: {p.magicValue}%</span>
